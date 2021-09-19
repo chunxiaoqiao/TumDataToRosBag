@@ -33,11 +33,11 @@ sensor_msgs::ImagePtr img_1_msg;
 ros::Publisher imu_pub;
 ros::Publisher img_0_pub;
 ros::Publisher img_1_pub;
-string filePath="/media/q/neu/dataset/TUM/4season数据集/buinesspark/recording_2021-02-25_14-16-43_imu_gnss/recording_2021-02-25_14-16-43/";//uisee 数据基础位置
-string imgPath = "/media/q/neu/dataset/TUM/4season数据集/buinesspark/recording_2021-02-25_14-16-43_stereo_images_undistorted/recording_2021-02-25_14-16-43/";
+string filePath="/media/q/neu/dataset/TUM/4season数据集/buinesspark/recording_2021-02-25_14-16-43_imu_gnss/recording_2021-02-25_14-16-43/";//imu 数据位置
+string imgPath = "/media/q/neu/dataset/TUM/4season数据集/buinesspark/recording_2021-02-25_14-16-43_stereo_images_undistorted/recording_2021-02-25_14-16-43/";//图像数据位置
 //imu 路径
 string imu_path=filePath+"/imu.txt";//"dump_images/image_capturer_1/imu.txt";
-ifstream imufile(imu_path,ios::in);
+//ifstream imufile(imu_path,ios::in);
 string bagPath=filePath+"/test1.bag";
 
 Eigen::Vector3d mag;
@@ -46,6 +46,18 @@ Eigen::Vector3d gyr;
 double imu_time;
 int main(int argc, char* argv[])
 {
+    if(argc<2) return false;
+    filePath=argv[1];
+    std::cout<<"imu and export bag filePath="<<filePath<<std::endl;
+    imu_path=filePath+"/imu.txt";
+    if(access(imu_path.c_str(), 0)!=0){std::cout<<"no imu data"<<std::endl;return -1;}
+    ifstream imufile(imu_path,ios::in);
+    bagPath=filePath+"/test1.bag";//输出rosbag
+    imgPath=argv[2];
+    string imgTimePath=imgPath+"/times.txt";
+    if(access(imgTimePath.c_str(), 0)!=0){std::cout<<"no imgTimePath"<<std::endl;return -1;}
+    std::cout<<"loading imu and img ......"<<std::endl;
+
     ros::init(argc,argv,"Tum");
     ros::NodeHandle n;
     imu_pub=n.advertise<sensor_msgs::Imu>("imu",10);
@@ -67,7 +79,7 @@ int main(int argc, char* argv[])
             endImu=readImuFile(imufile, imu_time, mag, acc, gyr);//读取IMU
             bag.write("imu",ros::Time(imu_time),imuMsg);;
         }
-        if(imgTimeStamp[i]<imu_time)
+        if(imgTimeStamp[i]<imu_time && i<Img0FileName.size() && i<Img1FileName.size())
         {
             cv::Mat img0= cv::imread(Img0FileName[i], CV_LOAD_IMAGE_UNCHANGED);
             cv::Mat img1= cv::imread(Img1FileName[i], CV_LOAD_IMAGE_UNCHANGED);
@@ -84,6 +96,11 @@ int main(int argc, char* argv[])
             bag.write("img1",ros::Time(imgTimeStamp[i]),img_1_msg);;
             i++;
         }
+        if(endImu || i>=Img0FileName.size() || i>=Img1FileName.size())
+        {
+            break;
+        }
+        ros::Duration(0.01).sleep();
         ros::spinOnce();
     }
     bag.close();
@@ -169,7 +186,7 @@ void LoadImages(const string &strPathToSequence,
             imgNameList.push_back(imgName);
             string time_stamp;
             ss>>time_stamp;
-            std::cout<<time_stamp<<std::endl;
+//            std::cout<<time_stamp<<std::endl;
             vTimestamps.push_back(stod(time_stamp));
         }
     }
