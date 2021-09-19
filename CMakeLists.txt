@@ -22,6 +22,7 @@ include_directories(
 )
 include_directories("/usr/include/eigen3")
 find_package(OpenCV REQUIRED)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/executableFile)
 add_executable(TumDataToRosBag
         src/TumDataToRosBag.cpp
         )

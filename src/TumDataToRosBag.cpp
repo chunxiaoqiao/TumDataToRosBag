@@ -104,6 +104,7 @@ int main(int argc, char* argv[])
         ros::spinOnce();
     }
     bag.close();
+    std::cout << "write bag file in : "<<bagPath << std::endl;
     std::cout << "end!" << std::endl;
     return 0;
 }
