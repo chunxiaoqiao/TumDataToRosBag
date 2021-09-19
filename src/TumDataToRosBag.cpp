@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
         {
             break;
         }
-        ros::Duration(0.01).sleep();
+        ros::Duration(0.0001).sleep();
         ros::spinOnce();
     }
     bag.close();
